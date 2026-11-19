@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Школьный портал</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body { background: #f0f4f8; color: #2d3748; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; padding: 20px; text-align: center;
+  }
+  header h1 { font-size: 24px; }
+
+  .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+
+  /* Вкладки */
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 15px; border: none; border-radius: 10px;
+    background: white; cursor: pointer; font-size: 16px; font-weight: 600;
+    color: #4a5568; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: 0.2s;
+  }
+  .tab.active { background: #667eea; color: white; }
+
+  /* Панели */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: white; border-radius: 12px; padding: 20px;
+    margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  h3 { margin-bottom: 15px; color: #2d3748; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;}
+  
+  label { display: block; margin: 10px 0 5px; font-weight: 600; font-size: 14px; }
+  
+  /* Поля ввода */
+  input, textarea, select {
+    width: 100%; padding: 12px; border: 2px solid #cbd5e0;
+    border-radius: 8px; font-size: 16px; background: #fff;
+    margin-bottom: 10px; transition: 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  button.btn {
+    background: #667eea; color: white; border: none; padding: 12px 24px;
+    border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: 0.2s;
+  }
+  button.btn:hover { background: #5568d3; }
+  button.btn-danger { background: #e53e3e; padding: 8px 14px; font-size: 14px; border:none; border-radius:8px; cursor:pointer;}
+  button.btn-danger:hover { background: #c53030; }
+  button.btn-logout { background: #edf2f7; color: #4a5568; padding: 8px 16px; font-size: 14px; border:none; border-radius:8px; cursor:pointer;}
+
+  /* Блоки классов */
+  .class-block {
+    border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px;
+    margin-bottom: 15px; background: #f8fafc;
+  }
+  .class-row { display: flex; gap: 10px; align-items: flex-end; }
+  .class-row > div { flex: 1; }
+
+  /* Теги предметов */
+  .subjects-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 20px; }
+  .subject-tag {
+    background: #ebf4ff; color: #3182ce; padding: 6px 12px; border-radius: 20px;
+    font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  .subject-tag button {
+    background: none; border: none; color: #e53e3e; font-size: 18px; font-weight: bold;
+    cursor: pointer; line-height: 1;
+  }
+  
+  /* Уроки */
+  .lesson {
+    background: white; border-radius: 12px; padding: 18px;
+    margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 5px solid #667eea;
+  }
+  .lesson-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+  .lesson-subject { font-size: 18px; font-weight: 700; color: #2d3748; }
+  .lesson-topic { margin: 8px 0; color: #4a5568; }
+  .lesson-hw { background: #fef5e7; border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 15px; }
+  .lesson-hw strong { color: #d69e2e; }
+  .empty { text-align: center; color: #a0aec0; padding: 40px 20px; }
+  
+  .badge { display: inline-block; background: #edf2f7; color: #4a5568; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .error { color: #e53e3e; font-size: 14px; margin-bottom: 10px; display: none; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Школьный портал</h1>
+</header>
+
+<div class="container">
+  <!-- Вкладки -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('student')">👨‍🎓 Ученик</button>
+    <button class="tab" onclick="switchTab('teacher')">👨‍🏫 Учитель</button>
+  </div>
+
+  <!-- ===== ПАНЕЛЬ 1: УЧЕНИК ===== -->
+  <div class="panel active" id="panel-student">
+    <div id="loginBox" class="card">
+      <h3>Вход для ученика</h3>
+      <label>Название твоего класса (например 5А)</label>
+      <input type="text" id="studentClassInput" placeholder="Введи класс...">
+      
+      <label>Пароль класса</label>
+      <input type="password" id="studentPassInput" placeholder="Введи пароль...">
+      
+      <div class="error" id="studentError">❌ Неверный класс или пароль</div>
+      <button class="btn" style="width:100%;" onclick="studentLogin()">Войти</button>
+    </div>
+
+    <div id="homeworkBox" style="display:none;">
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center; background:#eef2ff;">
+        <b>Твой класс: <span id="myClassLabel"></span></b>
+        <button class="btn-logout" onclick="studentLogout()">Выйти</button>
+      </div>
+      <div id="studentLessons"></div>
+    </div>
+  </div>
+
+  <!-- ===== ПАНЕЛЬ 2: УЧИТЕЛЬ ===== -->
+  <div class="panel" id="panel-teacher">
+    
+    <!-- Форма входа -->
+    <div id="teacherLoginBox" class="card">
+      <h3>🔒 Вход для учителя</h3>
+      <label>Пароль учителя</label>
+      <input type="password" id="teacherPassInput" placeholder="Пароль...">
+      <div class="error" id="teacherError">❌ Неверный пароль</div>
+      <button class="btn" style="width:100%;" onclick="teacherLogin()">Войти</button>
+    </div>
+
+    <!-- Админка -->
+    <div id="teacherAdminBox" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2>Панель управления</h2>
+        <button class="btn-logout" onclick="teacherLogout()">Выйти</button>
+      </div>
+
+      <!-- ШАГ 1: КЛАССЫ -->
+      <div class="card">
+        <h3>🏫 Шаг 1. Классы и пароли</h3>
+        <p style="font-size:14px; color:#718096; margin-bottom:15px;">
+          Ученики будут вводить эти названия и пароли для входа.
+        </p>
+        <button class="btn" style="margin-bottom:15px;" onclick="addNewClassBlock()">+ Добавить класс</button>
+        <div id="classBlocksContainer"></div>
+      </div>
+
+      <!-- ШАГ 2: ПРЕДМЕТЫ -->
+      <div class="card">
+        <h3>📖 Шаг 2. Список предметов</h3>
+        <p style="font-size:14px; color:#718096; margin-bottom:15px;">
+          Добавь предметы, которые ты ведешь. Потом выберешь их из списка при создании урока.
+        </p>
+        
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="newSubjectInput" placeholder="Например: Математика" style="margin:0;">
+          <button class="btn" onclick="addSubject()">Добавить</button>
+        </div>
+
+        <div class="subjects-list" id="subjectsContainer"></div>
+      </div>
+
+      <!-- ШАГ 3: УРОКИ -->
+      <div class="card">
+        <h3>➕ Шаг 3. Создать урок</h3>
+        
+        <label>Выбери предмет</label>
+        <select id="lessonSubjectSelect">
+          <option value="">-- Выберите из списка --</option>
+          <!-- Заполняется через JS -->
+        </select>
+
+        <label>Выбери класс</label>
+        <select id="lessonClassSelect">
+          <option value="">-- Выберите из списка --</option>
+          <!-- Заполняется через JS -->
+        </select>
+        
+        <label>Дата</label>
+        <input type="date" id="lessonDate">
+        
+        <label>Тема урока</label>
+        <textarea id="lessonTopic" placeholder="Что проходили..."></textarea>
+        
+        <label>Домашнее задание</label>
+        <textarea id="lessonHw" placeholder="Что задано..."></textarea>
+        
+        <button class="btn" style="width:100%;" onclick="addLesson()">Опубликовать урок</button>
+      </div>
+
+      <h3 style="margin-top:30px;">📋 Все опубликованные уроки</h3>
+      <div id="teacherLessons"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const MAIN_TEACHER_PASSWORD = "1111";
+
+  // ===== БАЗА ДАННЫХ =====
+  function getClasses() { return JSON.parse(localStorage.getItem('my_classes') || '[]'); }
+  function saveClasses(data) { localStorage.setItem('my_classes', JSON.stringify(data)); }
+
+  function getSubjects() { return JSON.parse(localStorage.getItem('my_subjects') || '[]'); }
+  function saveSubjects(data) { localStorage.setItem('my_subjects', JSON.stringify(data)); }
+
+  function getLessons() { return JSON.parse(localStorage.getItem('my_lessons') || '[]'); }
+  function saveLessons(data) { localStorage.setItem('my_lessons', JSON.stringify(data)); }
+
+  // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    
+    if (tabName === 'student') {
+      document.getElementById('panel-student').classList.add('active');
+    } else {
+      document.getElementById('panel-teacher').classList.add('active');
+      if (sessionStorage.getItem('isTeacher') === 'true') {
+        renderTeacherClasses();
+        renderTeacherSubjects();
+        updateDropdowns();
+        renderTeacherLessons();
+      }
+    }
+  }
+
+  // ===== УЧИТЕЛЬ ВХОД/ВЫХОД =====
+  function teacherLogin() {
+    const p = document.getElementById('teacherPassInput').value;
+    if (p === MAIN_TEACHER_PASSWORD) {
+      sessionStorage.setItem('isTeacher', 'true');
+      document.getElementById('teacherError').style.display = 'none';
+      document.getElementById('teacherPassInput').value = '';
+      
+      document.getElementById('teacherLoginBox').style.display = 'none';
+      document.getElementById('teacherAdminBox').style.display = 'block';
+      
+      renderTeacherClasses();
+      renderTeacherSubjects();
+      updateDropdowns();
+      renderTeacherLessons();
+    } else {
+      document.getElementById('teacherError').style.display = 'block';
+    }
+  }
+
+  function teacherLogout() {
+    sessionStorage.removeItem('isTeacher');
+    document.getElementById('teacherLoginBox').style.display = 'block';
+    document.getElementById('teacherAdminBox').style.display = 'none';
+    switchTab('student');
+  }
+
+  // ===== КЛАССЫ =====
+  function renderTeacherClasses() {
+    const container = document.getElementById('classBlocksContainer');
+    const classes = getClasses();
+    container.innerHTML = '';
+
+    if (classes.length === 0) {
+      container.innerHTML = '<p style="color:#a0aec0;">Пока нет классов.</p>';
+    } else {
+      classes.forEach((cls, index) => {
+        const block = document.createElement('div');
+        block.className = 'class-block';
+        block.innerHTML = `
+          <div class="class-row">
+            <div>
+              <label>Класс</label>
+              <input type="text" value="${cls.name}" onchange="updateClassName(${index}, this.value)">
+            </div>
+            <div>
+              <label>Пароль</label>
+              <input type="text" value="${cls.password}" onchange="updateClassPass(${index}, this.value)">
+            </div>
+            <button class="btn-danger" onclick="deleteClass(${index})">Удалить</button>
+          </div>
+        `;
+        container.appendChild(block);
+      });
+    }
+    updateDropdowns(); // Обновляем выпадающий список при изменении классов
+  }
+
+  function addNewClassBlock() {
+    const classes = getClasses();
+    classes.push({ name: '', password: '' });
+    saveClasses(classes);
+    renderTeacherClasses();
+  }
+
+  function updateClassName(index, value) {
+    const classes = getClasses();
+    classes[index].name = value.trim();
+    saveClasses(classes);
+    updateDropdowns();
+  }
+
+  function updateClassPass(index, value) {
+    const classes = getClasses();
+    classes[index].password = value.trim();
+    saveClasses(classes);
+  }
+
+  function deleteClass(index) {
+    if (!confirm('Удалить этот класс?')) return;
+    const classes = getClasses();
+    classes.splice(index, 1);
+    saveClasses(classes);
+    renderTeacherClasses();
+  }
+
+  // ===== ПРЕДМЕТЫ =====
+  function renderTeacherSubjects() {
+    const container = document.getElementById('subjectsContainer');
+    const subjects = getSubjects();
+    container.innerHTML = '';
+
+    if (subjects.length === 0) {
+      container.innerHTML = '<p style="color:#a0aec0; font-size:14px;">Список пуст. Добавьте предмет выше.</p>';
+    } else {
+      subjects.forEach((sub, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'subject-tag';
+        tag.innerHTML = `
+          ${sub}
+          <button onclick="deleteSubject(${index})" title="Удалить">✕</button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+    updateDropdowns();
+  }
+
+  function addSubject() {
+    const input = document.getElementById('newSubjectInput');
+    const val = input.value.trim();
+    if (!val) return;
+    
+    const subjects = getSubjects();
+    if (subjects.includes(val)) {
+      alert('Такой предмет уже есть');
+      return;
+    }
+    
+    subjects.push(val);
+    saveSubjects(subjects);
+    input.value = '';
+    renderTeacherSubjects();
+  }
+
+  function deleteSubject(index) {
+    if (!confirm('Удалить предмет?')) return;
+    const subjects = getSubjects();
+    subjects.splice(index, 1);
+    saveSubjects(subjects);
+    renderTeacherSubjects();
+  }
+
+  // ===== ОБНОВЛЕНИЕ ВЫПАДАЮЩИХ СПИСКОВ =====
+  function updateDropdowns() {
+    const subSelect = document.getElementById('lessonSubjectSelect');
+    const clsSelect = document.getElementById('lessonClassSelect');
+    
+    // Запоминаем текущий выбор
+    const currentSub = subSelect.value;
+    const currentCls = clsSelect.value;
+
+    // Заполняем предметы
+    subSelect.innerHTML = '<option value="">-- Выберите предмет --</option>';
+    getSubjects().forEach(sub => {
+      subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+
+    // Заполняем классы
+    clsSelect.innerHTML = '<option value="">-- Выберите класс --</option>';
+    getClasses().forEach(cls => {
+      if(cls.name) {
+        clsSelect.innerHTML += `<option value="${cls.name}">${cls.name}</option>`;
+      }
+    });
+
+    // Восстанавливаем выбор если он был
+    if(getSubjects().includes(currentSub)) subSelect.value = currentSub;
+    if(getClasses().map(c=>c.name).includes(currentCls)) clsSelect.value = currentCls;
+  }
+
+  // ===== УРОКИ =====
+  function addLesson() {
+    const sub = document.getElementById('lessonSubjectSelect').value;
+    const cls = document.getElementById('lessonClassSelect').value;
+    const date = document.getElementById('lessonDate').value;
+    const topic = document.getElementById('lessonTopic').value.trim();
+    const hw = document.getElementById('lessonHw').value.trim();
+
+    if (!sub || !cls || !date || !topic) {
+      alert('Выбери предмет, класс, дату и заполни тему!');
+      return;
+    }
+
+    const lessons = getLessons();
+    lessons.unshift({ id: Date.now(), subject: sub, grade: cls, date: date, topic: topic, homework: hw });
+    saveLessons(lessons);
+
+    document.getElementById('lessonTopic').value = '';
+    document.getElementById('lessonHw').value = '';
+
+    renderTeacherLessons();
+    alert('✅ Урок добавлен!');
+  }
+
+  function deleteLesson(id) {
+    if (!confirm('Удалить урок?')) return;
+    const lessons = getLessons().filter(l => l.id !== id);
+    saveLessons(lessons);
+    renderTeacherLessons();
+  }
+
+  function renderTeacherLessons() {
+    const container = document.getElementById('teacherLessons');
+    const lessons = getLessons();
+    if (lessons.length === 0) {
+      container.innerHTML = '<p style="color:#a0aec0;">Нет уроков.</p>';
+      return;
+    }
+    container.innerHTML = lessons.map(l => `
+      <div class="lesson">
+        <div class="lesson-header">
+          <div>
+            <div class="lesson-subject">${l.subject}</div>
+            <span class="badge">${l.grade}</span>
+          </div>
+          <button class="btn-danger" onclick="deleteLesson(${l.id})">Удалить</button>
+        </div>
+        <div style="font-size:13px; color:#718096; margin-top:5px;">Дата: ${formatDate(l.date)}</div>
+        <div class="lesson-topic"><b>Тема:</b> ${l.topic}</div>
+        ${l.homework ? `<div class="lesson-hw"><strong>ДЗ:</strong><br>${l.homework}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ===== УЧЕНИК =====
+  function studentLogin() {
+    const clsName = document.getElementById('studentClassInput').value.trim();
+    const clsPass = document.getElementById('studentPassInput').value.trim();
+    const classes = getClasses();
+    
+    const found = classes.find(c => c.name.toLowerCase() === clsName.toLowerCase() && c.password === clsPass);
+
+    if (found) {
+      sessionStorage.setItem('studentMyClass', found.name);
+      document.getElementById('studentError').style.display = 'none';
+      showStudentHomework(found.name);
+    } else {
+      document.getElementById('studentError').style.display = 'block';
+    }
+  }
+
+  function studentLogout() {
+    sessionStorage.removeItem('studentMyClass');
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('homeworkBox').style.display = 'none';
+    document.getElementById('studentClassInput').value = '';
+    document.getElementById('studentPassInput').value = '';
+  }
+
+  function showStudentHomework(className) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('homeworkBox').style.display = 'block';
+    document.getElementById('myClassLabel').textContent = className;
+
+    const lessons = getLessons().filter(l => l.grade.toLowerCase() === className.toLowerCase());
+    const container = document.getElementById('studentLessons');
+
+    if (lessons.length === 0) {
+      container.innerHTML = '<div class="empty">Для твоего класса пока нет домашних заданий.</div>';
+      return;
+    }
+
+    container.innerHTML = lessons.map(l => `
+      <div class="lesson">
+        <div class="lesson-subject">${l.subject}</div>
+        <div style="font-size:13px; color:#718096; margin:5px 0;">${formatDate(l.date)}</div>
+        <div class="lesson-topic"><b>Тема:</b> ${l.topic}</div>
+        ${l.homework ? `<div class="lesson-hw"><strong>📝 ДЗ:</strong><br>${l.homework}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ===== УТИЛИТЫ =====
+  function formatDate(d) {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return `${day}.${m}.${y}`;
+  }
+
+  // ===== СТАРТ =====
+  document.getElementById('lessonDate').valueAsDate = new Date();
+  
+  if (sessionStorage.getItem('studentMyClass')) {
+    showStudentHomework(sessionStorage.getItem('studentMyClass'));
+  }
+  
+  if (sessionStorage.getItem('isTeacher') === 'true') {
+    document.getElementById('teacherLoginBox').style.display = 'none';
+    document.getElementById('teacherAdminBox').style.display = 'block';
+  }
+</script>
+</body>
+</html>
